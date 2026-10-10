@@ -1,0 +1,51 @@
+# Codemagic CI — unsigned release IPA (sign free on Windows with Sideloadly).
+# App root = repo root. API base defaults to https://sogo.co.ug.
+workflows:
+  ios:
+    name: Vendor iOS (unsigned IPA)
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    environment:
+      flutter: 3.41.8
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Flutter packages
+        script: flutter pub get
+      - name: Build unsigned IPA
+        script: flutter build ipa --release --no-codesign
+    artifacts:
+      - build/ios/ipa/*.ipa
+
+  ios-preview:
+    name: Vendor iOS preview (simulator screenshots)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      flutter: 3.41.8
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Flutter packages
+        script: flutter pub get
+      - name: Launch in simulator and capture screenshots
+        script: |
+          #!/bin/zsh
+          set -e
+          APP_ID="com.sogo.vendor"
+          UDID=$(python3 -c "import json,subprocess; devs=json.loads(subprocess.check_output(['xcrun','simctl','list','devices','-j']).decode())['devices']; print(next((d['udid'] for lst in devs.values() for d in lst if d.get('isAvailable') and 'iPhone' in d.get('name','')), ''))")
+          if [ -z "$UDID" ]; then echo "No available iPhone simulator"; xcrun simctl list devices; exit 1; fi
+          echo "Using simulator $UDID"
+          xcrun simctl bootstatus "$UDID" -b >/dev/null 2>&1 || xcrun simctl boot "$UDID"
+          flutter build ios --simulator --no-codesign
+          xcrun simctl install "$UDID" build/ios/iphonesimulator/Runner.app
+          xcrun simctl privacy "$UDID" grant location "$APP_ID"
+          xcrun simctl launch "$UDID" "$APP_ID"
+          mkdir -p screenshots
+          sleep 12
+          xcrun simctl io "$UDID" screenshot screenshots/onboarding.png
+          sleep 8
+          xcrun simctl io "$UDID" screenshot screenshots/settled.png
+          ls -la screenshots/
+    artifacts:
+      - screenshots/*.png
