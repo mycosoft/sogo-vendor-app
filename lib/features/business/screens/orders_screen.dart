@@ -233,7 +233,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     ),
                   ],
                   const SizedBox(height: SogoSpacing.xl),
-                  Text('Update status', style: SogoText.headlineMd),
+                  const Text('Update status', style: SogoText.headlineMd),
                   const SizedBox(height: SogoSpacing.sm),
                   Text('The customer is notified at every step.',
                       style: SogoText.bodySm

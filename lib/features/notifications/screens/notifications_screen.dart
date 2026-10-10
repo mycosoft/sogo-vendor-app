@@ -3,7 +3,6 @@ import '../../../core/app_services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/sogo_widgets.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});

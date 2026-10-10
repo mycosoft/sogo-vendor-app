@@ -28,11 +28,11 @@ class VendorRegisterScreen extends StatefulWidget {
 }
 
 class _DocRow {
-  String type;
+  String type = 'national_id';
   String? path;
   String? name;
 
-  _DocRow({this.type = 'national_id', this.path, this.name});
+  _DocRow();
 }
 
 class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
@@ -63,7 +63,7 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
     ('mechanic', 'Mechanic', Icons.build_rounded),
     ('shop', 'Parts Shop', Icons.storefront_outlined),
     ('tow', 'Towing', Icons.local_shipping_outlined),
-    ('washer', 'Car Wash', Icons.local_car_wash_outlined),
+    ('washer', 'Wash Bay', Icons.local_car_wash_outlined),
     ('parts', 'Parts Dealer', Icons.settings_outlined),
     ('lubricant', 'Lubricants', Icons.oil_barrel_outlined),
     ('other', 'Other', Icons.handyman_outlined),
@@ -80,7 +80,6 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
   List<Map<String, dynamic>> _cities = [];
   int? _locationId;
   String? _cityName;
-  bool _loadingLocation = false;
   bool _locating = false;
   double? _gpsLat;
   double? _gpsLng;
@@ -149,17 +148,14 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
   }
 
   Future<void> _loadDistricts() async {
-    setState(() => _loadingLocation = true);
     try {
       final d = await locationsApi.districts();
       if (!mounted) return;
       setState(() {
         _districts = d;
-        _loadingLocation = false;
       });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _loadingLocation = false);
     }
   }
 
@@ -558,7 +554,7 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Account details', style: SogoText.headlineMd),
+        const Text('Account details', style: SogoText.headlineMd),
         const SizedBox(height: 4),
         Text('This is your login. Use a phone and email you can access.',
             style: SogoText.bodySm.copyWith(color: SogoColors.textSecondary)),
@@ -622,7 +618,7 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tell us about your business', style: SogoText.headlineMd),
+        const Text('Tell us about your business', style: SogoText.headlineMd),
         const SizedBox(height: 4),
         Text('Customers see this on your profile.',
             style: SogoText.bodySm.copyWith(color: SogoColors.textSecondary)),
@@ -733,7 +729,7 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('What services do you offer?', style: SogoText.headlineMd),
+        const Text('What services do you offer?', style: SogoText.headlineMd),
         const SizedBox(height: 4),
         Text('Pick at least one. Customers find you through these.',
             style: SogoText.bodySm.copyWith(color: SogoColors.textSecondary)),
@@ -815,7 +811,7 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Where are you based?', style: SogoText.headlineMd),
+        const Text('Where are you based?', style: SogoText.headlineMd),
         const SizedBox(height: 4),
         Text('Customers search by location - pick your area.',
             style: SogoText.bodySm.copyWith(color: SogoColors.textSecondary)),
@@ -892,7 +888,7 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
         ),
         const SizedBox(height: SogoSpacing.lg),
         DropdownButtonFormField<String>(
-          value: _district,
+          initialValue: _district,
           isExpanded: true,
           decoration: InputDecoration(
             labelText: 'District',
@@ -911,7 +907,7 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
         ),
         const SizedBox(height: SogoSpacing.lg),
         DropdownButtonFormField<int>(
-          value: _locationId,
+          initialValue: _locationId,
           isExpanded: true,
           decoration: InputDecoration(
             labelText: 'City / Town',
@@ -968,7 +964,7 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Verification documents', style: SogoText.headlineMd),
+        const Text('Verification documents', style: SogoText.headlineMd),
         const SizedBox(height: 4),
         Text(
             'Optional but recommended - admins approve verified vendors faster.',
@@ -1011,7 +1007,7 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: doc.type,
+                          initialValue: doc.type,
                           isExpanded: true,
                           decoration: const InputDecoration(
                               labelText: 'Document type',
@@ -1156,7 +1152,7 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Review your details', style: SogoText.headlineMd),
+        const Text('Review your details', style: SogoText.headlineMd),
         const SizedBox(height: 4),
         Text('Check everything below before you submit.',
             style: SogoText.bodySm.copyWith(color: SogoColors.textSecondary)),
@@ -1282,7 +1278,7 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
           controller: controller,
           padding: const EdgeInsets.all(SogoSpacing.xl),
           children: [
-            Text('Terms & Conditions', style: SogoText.headlineLg),
+            const Text('Terms & Conditions', style: SogoText.headlineLg),
             const SizedBox(height: SogoSpacing.md),
             Text(
               '1. Services\n'
@@ -1326,7 +1322,7 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
           controller: controller,
           padding: const EdgeInsets.all(SogoSpacing.xl),
           children: [
-            Text('Privacy Policy', style: SogoText.headlineLg),
+            const Text('Privacy Policy', style: SogoText.headlineLg),
             const SizedBox(height: SogoSpacing.md),
             Text(
               '1. Data we collect\n'

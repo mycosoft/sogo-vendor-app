@@ -20,10 +20,12 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   Future<List<Map<String, dynamic>>> _load() async {
     final res = await providerApi.requests();
     final data = res['data'];
-    if (data is Map && data['items'] is List)
+    if (data is Map && data['items'] is List) {
       return List<Map<String, dynamic>>.from(data['items'] as List);
-    if (data is Map && data['data'] is List)
+    }
+    if (data is Map && data['data'] is List) {
       return List<Map<String, dynamic>>.from(data['data'] as List);
+    }
     if (data is List) return List<Map<String, dynamic>>.from(data);
     return const [];
   }
@@ -69,8 +71,9 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
         future: _future,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            if (snapshot.hasError)
+            if (snapshot.hasError) {
               return Center(child: Text(snapshot.error.toString()));
+            }
             return const Center(child: CircularProgressIndicator());
           }
           final requests = snapshot.data!;

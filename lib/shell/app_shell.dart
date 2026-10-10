@@ -28,11 +28,11 @@ class _AppShellState extends State<AppShell> {
   }
 
   late final List<Widget> _pages = <Widget>[
-    HomeScreen(),
-    MyRequestsScreen(),
+    const HomeScreen(),
+    const MyRequestsScreen(),
     JobsScreen(key: _jobsKey),
-    PaymentsScreen(),
-    ProfileScreen(),
+    const PaymentsScreen(),
+    const ProfileScreen(),
   ];
 
   static const _items = <BottomNavItem>[

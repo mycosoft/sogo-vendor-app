@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -44,13 +43,31 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
     super.initState();
     _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) => _refresh());
     if (_live && !widget.readOnly) _startTracking();
+    _subscribeRealtime();
   }
 
   @override
   void dispose() {
     _pollTimer?.cancel();
     _posSub?.cancel();
+    try {
+      final id = _request['id'] as int;
+      realtime.unsubscribe('private-requests.$id', 'request.updated');
+    } catch (_) {}
     super.dispose();
+  }
+
+  /// Live socket upgrade: customer cancels and status changes refresh
+  /// instantly instead of waiting for the 10s poll. The poll stays as
+  /// fallback.
+  Future<void> _subscribeRealtime() async {
+    try {
+      final id = _request['id'] as int;
+      await realtime.subscribe('private-requests.$id', 'request.updated',
+          (_) {
+        if (mounted) _refresh();
+      });
+    } catch (_) {}
   }
 
   /// Refresh the job (status moves, customer cancels, etc.).
@@ -119,6 +136,16 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content: Text('Job accepted - customer notified'),
               backgroundColor: SogoColors.primary));
+        }
+      });
+
+  Future<void> _decline() => _run(() async {
+        await providerApi.declineJob(_request['id'] as int);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Passed - the job goes to another provider'),
+              backgroundColor: SogoColors.secondary));
+          Navigator.of(context).pop(true);
         }
       });
 
@@ -312,12 +339,12 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
     }
 
     final stages = <(_Step, String)>[
-      (_Step('Requested', Icons.receipt_long_rounded), at('created_at')),
-      (_Step('Matched to you', Icons.handshake_rounded), at('matched_at')),
-      (_Step('Accepted', Icons.thumb_up_alt_outlined), at('accepted_at')),
-      (_Step('Heading out', Icons.directions_car_rounded), at('arrived_at')),
-      (_Step('Working', Icons.build_rounded), at('started_at')),
-      (_Step('Completed', Icons.task_alt_rounded), at('completed_at')),
+      (const _Step('Requested', Icons.receipt_long_rounded), at('created_at')),
+      (const _Step('Matched to you', Icons.handshake_rounded), at('matched_at')),
+      (const _Step('Accepted', Icons.thumb_up_alt_outlined), at('accepted_at')),
+      (const _Step('Heading out', Icons.directions_car_rounded), at('arrived_at')),
+      (const _Step('Working', Icons.build_rounded), at('started_at')),
+      (const _Step('Completed', Icons.task_alt_rounded), at('completed_at')),
     ];
 
     const order = [
@@ -334,7 +361,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
 
     return SogoCard(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Progress', style: SogoText.headlineMd),
+        const Text('Progress', style: SogoText.headlineMd),
         const SizedBox(height: SogoSpacing.md),
         ...stages.asMap().entries.map((entry) {
           final i = entry.key;
@@ -576,13 +603,19 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
 
           // -- Actions (one button per stage, no duplicates) --
           if (!widget.readOnly) ...[
-            if (_canAccept)
+            if (_canAccept) ...[
               SogoButton(
                   label: 'Accept job',
                   icon: Icons.thumb_up_alt_outlined,
                   onPressed: _busy ? null : _accept,
-                  loading: _busy)
-            else if (_status == 'accepted' || _status == 'matched')
+                  loading: _busy),
+              const SizedBox(height: SogoSpacing.md),
+              SogoButton(
+                  label: 'Decline (pass to another provider)',
+                  icon: Icons.thumb_down_alt_outlined,
+                  variant: SogoButtonVariant.outline,
+                  onPressed: _busy ? null : _decline),
+            ] else if (_status == 'accepted' || _status == 'matched')
               SogoButton(
                   label: 'Start journey (en route)',
                   icon: Icons.directions_car_rounded,

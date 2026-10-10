@@ -285,7 +285,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         borderRadius: BorderRadius.circular(SogoRadius.pill),
                       ),
                       child: Text(
-                        '${provider['is_online'] == true ? 'Online' : 'Offline'}',
+                        provider['is_online'] == true ? 'Online' : 'Offline',
                         style: SogoText.labelMd
                             .copyWith(color: SogoColors.primary, fontSize: 11),
                       ),
@@ -325,7 +325,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             color: vFg, size: 20),
                         const SizedBox(width: SogoSpacing.md),
                         Expanded(
-                          child: Text('$vLabel',
+                          child: Text(vLabel,
                               style: SogoText.bodyMd.copyWith(
                                   color: vFg, fontWeight: FontWeight.w700)),
                         ),
@@ -646,49 +646,38 @@ class _HoursView extends StatelessWidget {
     final map = hours is Map
         ? Map<String, dynamic>.from(hours as Map)
         : <String, dynamic>{};
-    final open = _days.where((d) {
-      final v = map[d.$1] ??
-          map[d.$1.toUpperCase()] ??
-          map['${d.$1[0].toUpperCase()}${d.$1.substring(1)}'];
-      return _range(v).isNotEmpty;
-    }).map((d) {
-      final v = map[d.$1] ??
-          map[d.$1.toUpperCase()] ??
-          map['${d.$1[0].toUpperCase()}${d.$1.substring(1)}'];
-      return (d.$2, _range(v));
-    }).toList();
-
-    if (open.isEmpty) {
-      return SogoCard(
-        child: Row(children: [
-          const Icon(Icons.schedule_outlined, color: SogoColors.textMuted),
-          const SizedBox(width: SogoSpacing.md),
-          Expanded(
-              child: Text('No hours set - add them from Edit profile.',
-                  style: SogoText.bodySm
-                      .copyWith(color: SogoColors.textSecondary))),
-        ]),
-      );
-    }
 
     return SogoCard(
       padding: const EdgeInsets.symmetric(vertical: SogoSpacing.sm),
       child: Column(
         children: [
-          for (final d in open)
+          for (final d in _days)
             Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: SogoSpacing.lg, vertical: 6),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: SogoSpacing.lg, vertical: 6),
               child: Row(children: [
                 SizedBox(
                     width: 92,
-                    child: Text(d.$1,
+                    child: Text(d.$2,
                         style: SogoText.bodyMd
                             .copyWith(fontWeight: FontWeight.w700))),
                 Expanded(
-                    child: Text(d.$2,
+                    child: Text(
+                        _range(map[d.$1] ??
+                            map[d.$1.toUpperCase()] ??
+                            map['${d.$1[0].toUpperCase()}${d.$1.substring(1)}'])
+                            .isNotEmpty
+                            ? _range(map[d.$1] ??
+                                map[d.$1.toUpperCase()] ??
+                                map['${d.$1[0].toUpperCase()}${d.$1.substring(1)}'])
+                            : 'Closed',
                         style: SogoText.bodyMd.copyWith(
-                            color: SogoColors.primary,
+                            color: _range(map[d.$1] ??
+                                    map[d.$1.toUpperCase()] ??
+                                    map['${d.$1[0].toUpperCase()}${d.$1.substring(1)}'])
+                                .isNotEmpty
+                                ? SogoColors.primary
+                                : SogoColors.textSecondary,
                             fontWeight: FontWeight.w600))),
               ]),
             ),

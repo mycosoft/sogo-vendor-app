@@ -122,7 +122,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Flutterwave payment link', style: SogoText.headlineLg),
+            const Text('Flutterwave payment link', style: SogoText.headlineLg),
             const SizedBox(height: SogoSpacing.sm),
             Text(
                 'Share this link with the customer. When they pay, the invoice '
@@ -255,7 +255,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                       style: SogoText.bodySm
                           .copyWith(color: SogoColors.textSecondary)),
                   const SizedBox(height: SogoSpacing.md),
-                  Text('Items', style: SogoText.headlineMd),
+                  const Text('Items', style: SogoText.headlineMd),
                   const SizedBox(height: SogoSpacing.sm),
                   ...items.map((it) => Padding(
                         padding: const EdgeInsets.only(bottom: SogoSpacing.sm),
@@ -651,13 +651,13 @@ class _CreateInvoiceSheetState extends State<_CreateInvoiceSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('New invoice', style: SogoText.headlineLg),
+            const Text('New invoice', style: SogoText.headlineLg),
             const SizedBox(height: SogoSpacing.lg),
             Expanded(
               child: ListView(
                 children: [
                   DropdownButtonFormField<int>(
-                    value: _customerId,
+                    initialValue: _customerId,
                     isExpanded: true,
                     decoration: const InputDecoration(
                         labelText: 'Customer *', border: OutlineInputBorder()),
@@ -672,7 +672,7 @@ class _CreateInvoiceSheetState extends State<_CreateInvoiceSheet> {
                   ),
                   const SizedBox(height: SogoSpacing.md),
                   DropdownButtonFormField<String>(
-                    value: _paymentMethod,
+                    initialValue: _paymentMethod,
                     isExpanded: true,
                     decoration: const InputDecoration(
                         labelText: 'Payment method',
@@ -716,7 +716,7 @@ class _CreateInvoiceSheetState extends State<_CreateInvoiceSheet> {
                   // Live totals: discount off subtotal first, then tax.
                   _totalsCard(),
                   const SizedBox(height: SogoSpacing.lg),
-                  Text('Items', style: SogoText.headlineMd),
+                  const Text('Items', style: SogoText.headlineMd),
                   const SizedBox(height: SogoSpacing.sm),
                   ..._items.map((it) => _itemEditor(it)),
                   TextButton.icon(

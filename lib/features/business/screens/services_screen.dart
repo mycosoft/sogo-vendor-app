@@ -3,7 +3,6 @@ import '../../../core/app_services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/sogo_widgets.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -92,7 +91,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Add a service', style: SogoText.headlineLg),
+              const Text('Add a service', style: SogoText.headlineLg),
               const SizedBox(height: SogoSpacing.sm),
               Text(
                   'Pick what you offer and your starting price. Customers '
@@ -101,7 +100,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       .copyWith(color: SogoColors.textSecondary)),
               const SizedBox(height: SogoSpacing.lg),
               DropdownButtonFormField<int>(
-                value: selectedId,
+                initialValue: selectedId,
                 isExpanded: true,
                 decoration: const InputDecoration(
                     labelText: 'Service category *',
@@ -186,11 +185,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     )
                   : _error != null && _items.isEmpty
                       ? ListView(
-                          children: [
-                            const SizedBox(height: 120),
-                            const Icon(Icons.cloud_off_rounded,
+                          children: const [
+                            SizedBox(height: 120),
+                            Icon(Icons.cloud_off_rounded,
                                 size: 48, color: SogoColors.textMuted),
-                            const SizedBox(height: SogoSpacing.md),
+                            SizedBox(height: SogoSpacing.md),
                             Center(
                               child: Text(
                                 'Could not load services.\nPull down to retry.',
@@ -397,7 +396,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
               const SizedBox(height: 4),
               Switch(
                 value: active,
-                activeColor: SogoColors.primary,
+                activeThumbColor: SogoColors.primary,
                 onChanged: (_) async {
                   try {
                     await providerApi.toggleService(s['id'] as int);

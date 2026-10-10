@@ -7,6 +7,7 @@ import '../../../core/theme/app_text.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/sogo_widgets.dart';
 import '../../business/screens/business_screen.dart';
+import '../../business/screens/earnings_screen.dart';
 import '../../business/screens/inventory_screen.dart';
 import '../../business/screens/invoices_screen.dart';
 import '../../business/screens/orders_screen.dart';
@@ -66,7 +67,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     int unread = 0;
 
     try {
-      requests = _items(await providerApi.requests());
+      final all = _items(await providerApi.requests());
+      // Home shows live jobs only - finished ones drop off the list.
+      requests = all.where((r) {
+        final s = '${r['status'] ?? ''}';
+        return s != 'completed' && s != 'cancelled' && s != 'expired';
+      }).toList();
     } catch (_) {}
 
     try {
@@ -90,10 +96,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   List<Map<String, dynamic>> _items(Map<String, dynamic> res) {
     final data = res['data'];
-    if (data is Map && data['items'] is List)
+    if (data is Map && data['items'] is List) {
       return List<Map<String, dynamic>>.from(data['items'] as List);
-    if (data is Map && data['data'] is List)
+    }
+    if (data is Map && data['data'] is List) {
       return List<Map<String, dynamic>>.from(data['data'] as List);
+    }
     if (data is List) return List<Map<String, dynamic>>.from(data);
     return const [];
   }
@@ -429,6 +437,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         Text(isOnline ? 'Online' : 'Offline',
                             style: SogoText.bodySm
                                 .copyWith(color: Colors.white70)),
+                        if (provider['auto_hours'] == true) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius:
+                                  BorderRadius.circular(SogoRadius.pill),
+                            ),
+                            child: Text('AUTO',
+                                style: SogoText.labelMd.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800)),
+                          ),
+                        ],
                       ],
                     ),
                   ],
@@ -578,6 +602,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         Icons.description_outlined,
         SogoColors.tertiary,
         const InvoicesScreen()
+      ),
+      (
+        'Earnings',
+        'Revenue & stats',
+        Icons.trending_up_rounded,
+        SogoColors.success,
+        const EarningsScreen()
       ),
     ];
 

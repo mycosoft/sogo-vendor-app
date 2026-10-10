@@ -8,6 +8,8 @@ class ApiClient {
   final String baseUrl;
   String? _token;
 
+  String? get token => _token;
+
   Future<void> setToken(String? token) async {
     _token = token;
     final prefs = await SharedPreferences.getInstance();
@@ -91,15 +93,38 @@ class ApiClient {
   Map<String, dynamic> _decode(http.Response res) {
     final body = res.body.isEmpty ? <String, dynamic>{} : jsonDecode(res.body);
     if (res.statusCode >= 400) {
-      final message = body is Map ? body['message']?.toString() : null;
       throw ApiException(
         status: res.statusCode,
-        message: message ?? 'Request failed (${res.statusCode})',
-        body: body,
+        message: _errorMessage(body, res.statusCode),
+        body: body is Map ? Map<String, dynamic>.from(body) : null,
       );
     }
     if (body is Map<String, dynamic>) return body;
     return {'data': body};
+  }
+
+  /// Laravel validation responses carry every failed field under `errors`
+  /// — surface them all instead of just the first ("and N more errors").
+  String _errorMessage(dynamic body, int statusCode) {
+    if (body is Map) {
+      final errors = body['errors'];
+      if (errors is Map && errors.isNotEmpty) {
+        final lines = <String>[];
+        for (final msgs in errors.values) {
+          if (msgs is List) {
+            for (final m in msgs) {
+              lines.add('$m');
+            }
+          } else {
+            lines.add('$msgs');
+          }
+        }
+        if (lines.isNotEmpty) return lines.take(6).join('\n');
+      }
+      final message = body['message']?.toString();
+      if (message != null && message.isNotEmpty) return message;
+    }
+    return 'Request failed ($statusCode)';
   }
 }
 

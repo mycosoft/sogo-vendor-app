@@ -310,6 +310,9 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
   int? _categoryId;
   bool _active = true;
   String? _imagePath;
+  bool _freeDelivery = true;
+  late final _deliveryFee =
+      TextEditingController(text: '${widget.product?['delivery_fee'] ?? ''}');
   bool _saving = false;
 
   @override
@@ -319,6 +322,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
         widget.product?['product_category_id'];
     _categoryId = cid == null ? null : (cid as num).toInt();
     _active = widget.product?['is_active'] != false;
+    _freeDelivery = widget.product?['free_delivery'] != false;
   }
 
   @override
@@ -330,6 +334,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
     _sku.dispose();
     _brand.dispose();
     _description.dispose();
+    _deliveryFee.dispose();
     super.dispose();
   }
 
@@ -349,25 +354,35 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
       'price': double.tryParse(_price.text.trim()),
       'stock_quantity': int.tryParse(_stock.text.trim()) ?? 0,
       'low_stock_threshold': int.tryParse(_threshold.text.trim()) ?? 3,
+      'free_delivery': _freeDelivery,
+      'delivery_fee':
+          _freeDelivery ? 0 : (double.tryParse(_deliveryFee.text.trim()) ?? 0),
+      'product_category_id': _categoryId,
       if (_sku.text.trim().isNotEmpty) 'sku': _sku.text.trim(),
       if (_brand.text.trim().isNotEmpty) 'brand': _brand.text.trim(),
       if (_description.text.trim().isNotEmpty)
         'description': _description.text.trim(),
-      if (_categoryId != null) 'product_category_id': _categoryId,
       if (widget.product != null) 'is_active': _active,
     };
     try {
+      print('[DEBUG] Saving product, payload: $payload, imagePath: $_imagePath');
       if (widget.product == null) {
         await providerApi.addProduct(payload, imagePath: _imagePath);
       } else {
         await providerApi.updateProduct(widget.product!['id'] as int, payload,
             imagePath: _imagePath);
       }
+      print('[DEBUG] Product saved successfully');
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
+      print('[DEBUG] Save error: $e');
       if (mounted) {
+        String msg = e.toString();
+        if (msg.contains('422') || msg.contains('validation') || msg.contains('Validation')) {
+          msg = msg.replaceAll('Exception: ', '');
+        }
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.toString())));
+            .showSnackBar(SnackBar(content: Text(msg), duration: const Duration(seconds: 6)));
         setState(() => _saving = false);
       }
     }
@@ -463,7 +478,23 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                                 : null)),
                   ],
                 ),
-                const SizedBox(height: SogoSpacing.md),
+                const SizedBox(height: SogoSpacing.sm),
+                SwitchListTile(
+                  value: _freeDelivery,
+                  onChanged: (v) => setState(() => _freeDelivery = v),
+                  title: const Text('Free delivery'),
+                  subtitle: const Text('Turn off to charge a delivery fee'),
+                  contentPadding: EdgeInsets.zero,
+                  activeThumbColor: SogoColors.primary,
+                ),
+                if (!_freeDelivery)
+                  SogoTextField(
+                      label: 'Delivery fee (UGX)',
+                      hint: '0',
+                      controller: _deliveryFee,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true)),
+                const SizedBox(height: SogoSpacing.sm),
                 Row(
                   children: [
                     Expanded(
@@ -482,7 +513,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                 ),
                 const SizedBox(height: SogoSpacing.md),
                 DropdownButtonFormField<int>(
-                  value: _categoryId,
+                  initialValue: _categoryId,
                   decoration: InputDecoration(
                       labelText: 'Category',
                       border: OutlineInputBorder(
@@ -513,7 +544,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                     onChanged: (v) => setState(() => _active = v),
                     title: const Text('Visible in shop'),
                     contentPadding: EdgeInsets.zero,
-                    activeColor: SogoColors.primary,
+                    activeThumbColor: SogoColors.primary,
                   ),
                 ],
                 const SizedBox(height: SogoSpacing.lg),

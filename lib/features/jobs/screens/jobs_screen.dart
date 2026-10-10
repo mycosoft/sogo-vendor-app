@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/sogo_widgets.dart';
+import '../../../core/utils/app_time.dart';
 import '../../requests/screens/request_details_screen.dart';
 
 class JobsScreen extends StatefulWidget {
@@ -20,10 +21,12 @@ class JobsScreenState extends State<JobsScreen> {
     try {
       final res = await providerApi.availableJobs();
       final data = res['data'];
-      if (data is Map && data['items'] is List)
+      if (data is Map && data['items'] is List) {
         return List<Map<String, dynamic>>.from(data['items'] as List);
-      if (data is Map && data['data'] is List)
+      }
+      if (data is Map && data['data'] is List) {
         return List<Map<String, dynamic>>.from(data['data'] as List);
+      }
       if (data is List) return List<Map<String, dynamic>>.from(data);
       return const [];
     } catch (_) {
@@ -52,8 +55,9 @@ class JobsScreenState extends State<JobsScreen> {
         future: _future,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            if (snapshot.hasError)
+            if (snapshot.hasError) {
               return Center(child: Text(snapshot.error.toString()));
+            }
             return const Center(child: CircularProgressIndicator());
           }
           final jobs = snapshot.data!;
@@ -93,7 +97,12 @@ class JobsScreenState extends State<JobsScreen> {
                                   child: Text('#${jobs[i]['reference'] ?? ''}',
                                       style: SogoText.bodySm.copyWith(
                                           color: SogoColors.textMuted))),
-                              SogoBadge(label: 'AVAILABLE'),
+                              Text('Offered ${timeAgo(parseServerDate(jobs[i]['created_at']) ?? DateTime.now())}',
+                                  style: SogoText.bodySm.copyWith(
+                                      color: SogoColors.warning,
+                                      fontWeight: FontWeight.w700)),
+                              const SizedBox(width: SogoSpacing.sm),
+                              const SogoBadge(label: 'AVAILABLE'),
                             ],
                           ),
                           const SizedBox(height: 6),

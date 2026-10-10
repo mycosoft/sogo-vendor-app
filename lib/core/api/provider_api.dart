@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'api_client.dart';
 
@@ -22,7 +24,19 @@ class ProviderApi {
     if (logoPath == null && coverPath == null) {
       return _client.post('/api/v1/provider/update', payload);
     }
-    final fields = payload.map((k, v) => MapEntry(k, v == null ? '' : '$v'));
+    // Multipart carries strings only: booleans as 1/0 (Laravel's boolean
+    // rule rejects 'true'/'false'), maps/lists as JSON, nulls omitted.
+    final fields = <String, String>{};
+    payload.forEach((k, v) {
+      if (v == null) return;
+      if (v is bool) {
+        fields[k] = v ? '1' : '0';
+      } else if (v is Map || v is List) {
+        fields[k] = jsonEncode(v);
+      } else {
+        fields[k] = v.toString();
+      }
+    });
     final files = <http.MultipartFile>[];
     if (logoPath != null) {
       files.add(await http.MultipartFile.fromPath('logo', logoPath));
@@ -48,6 +62,11 @@ class ProviderApi {
 
   Future<Map<String, dynamic>> acceptJob(int id) =>
       _client.post('/api/v1/provider/requests/$id/accept');
+
+  /// Pass on a job offer. Recorded as tried (escalation skips it) —
+  /// never a penalty, the job just routes to someone else.
+  Future<Map<String, dynamic>> declineJob(int id) =>
+      _client.post('/api/v1/provider/requests/$id/decline');
 
   Future<Map<String, dynamic>> updateStatus(int id,
           {required String status, double? finalPrice}) =>
@@ -86,7 +105,15 @@ class ProviderApi {
     if (imagePath == null) {
       return _client.post('/api/v1/provider/inventory', payload);
     }
-    final fields = payload.map((k, v) => MapEntry(k, v == null ? '' : '$v'));
+    final fields = <String, String>{};
+    payload.forEach((k, v) {
+      if (v == null) return;
+      if (v is bool) {
+        fields[k] = v ? '1' : '0';
+      } else {
+        fields[k] = v.toString();
+      }
+    });
     final files = [await http.MultipartFile.fromPath('main_image', imagePath)];
     return _client.postMultipart('/api/v1/provider/inventory', fields, files);
   }
@@ -97,7 +124,15 @@ class ProviderApi {
     if (imagePath == null) {
       return _client.post('/api/v1/provider/inventory/$id', payload);
     }
-    final fields = payload.map((k, v) => MapEntry(k, v == null ? '' : '$v'));
+    final fields = <String, String>{};
+    payload.forEach((k, v) {
+      if (v == null) return;
+      if (v is bool) {
+        fields[k] = v ? '1' : '0';
+      } else {
+        fields[k] = v.toString();
+      }
+    });
     final files = [await http.MultipartFile.fromPath('main_image', imagePath)];
     return _client.postMultipart(
         '/api/v1/provider/inventory/$id', fields, files);

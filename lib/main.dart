@@ -6,6 +6,7 @@ import 'core/widgets/location_gate.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/pending_verification_screen.dart';
 import 'features/auth/screens/splash_screen.dart';
+import 'features/onboarding/screens/onboarding_screen.dart';
 import 'shell/app_shell.dart';
 
 void main() {
@@ -28,7 +29,7 @@ class SogoVendorApp extends StatelessWidget {
   }
 }
 
-/// Result of the startup bootstrap: token presence + vendor approval state.
+/// Result of the startup bootstrap: token + approval state.
 class _BootState {
   final String? token;
   final bool pendingApproval;
@@ -45,13 +46,58 @@ class _RootGate extends StatefulWidget {
 }
 
 class _RootGateState extends State<_RootGate> {
-  late final Future<_BootState> _bootFuture = _bootstrap();
+  bool _ready = false;
+  bool _onboarded = false;
+  _BootState _boot = const _BootState(null);
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    var onboarded = false;
+    try {
+      onboarded = await OnboardingScreen.isDone();
+    } catch (_) {}
+
+    final boot = onboarded ? await _bootstrap() : const _BootState(null);
+    if (!mounted) return;
+    setState(() {
+      _onboarded = onboarded;
+      _boot = boot;
+      _ready = true;
+    });
+  }
+
+  /// Continue immediately from local state — the onboarding flag is only
+  /// persisted best-effort, so storage problems can never trap the user.
+  void _finishOnboarding() {
+    setState(() {
+      _onboarded = true;
+      _ready = false;
+    });
+    _loadBootOnly();
+  }
+
+  Future<void> _loadBootOnly() async {
+    final boot = await _bootstrap();
+    if (!mounted) return;
+    setState(() {
+      _boot = boot;
+      _ready = true;
+    });
+  }
 
   /// A saved token means "logged in", but an unapproved vendor must stay
   /// on the pending-verification screen instead of the dashboard - on
   /// every launch until an admin approves the account.
   Future<_BootState> _bootstrap() async {
-    final token = await apiClient.loadToken();
+    String? token;
+    try {
+      token = await apiClient.loadToken();
+    } catch (_) {}
     if (token == null) return const _BootState(null);
 
     try {
@@ -73,20 +119,15 @@ class _RootGateState extends State<_RootGate> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<_BootState>(
-      future: _bootFuture,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData &&
-            snapshot.connectionState != ConnectionState.done) {
-          return const SplashScreen();
-        }
-        final boot = snapshot.data ?? const _BootState(null);
-        if (boot.token == null) return const LoginScreen();
-        if (boot.pendingApproval) {
-          return PendingVerificationScreen(phone: boot.phone ?? '');
-        }
-        return const AppShell();
-      },
-    );
+    if (!_ready) return const SplashScreen();
+    if (!_onboarded) {
+      return OnboardingScreen(onDone: _finishOnboarding);
+    }
+    final boot = _boot;
+    if (boot.token == null) return const LoginScreen();
+    if (boot.pendingApproval) {
+      return PendingVerificationScreen(phone: boot.phone ?? '');
+    }
+    return const AppShell();
   }
 }

@@ -47,10 +47,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   List<Map<String, dynamic>> _list(Map<String, dynamic> res) {
     final data = res['data'];
-    if (data is Map && data['items'] is List)
+    if (data is Map && data['items'] is List) {
       return List<Map<String, dynamic>>.from(data['items'] as List);
-    if (data is Map && data['data'] is List)
+    }
+    if (data is Map && data['data'] is List) {
       return List<Map<String, dynamic>>.from(data['data'] as List);
+    }
     if (data is List) return List<Map<String, dynamic>>.from(data);
     return const [];
   }
@@ -90,7 +92,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Request withdrawal', style: SogoText.headlineLg),
+              const Text('Request withdrawal', style: SogoText.headlineLg),
               const SizedBox(height: SogoSpacing.sm),
               Text('Available: ${_ugx(balance)}',
                   style: SogoText.bodySm
@@ -106,7 +108,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               ),
               const SizedBox(height: SogoSpacing.md),
               DropdownButtonFormField<String>(
-                value: destination,
+                initialValue: destination,
                 decoration: const InputDecoration(
                   labelText: 'Destination',
                   border: OutlineInputBorder(),

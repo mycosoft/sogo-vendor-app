@@ -117,7 +117,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 Container(
                   width: 84,
                   height: 84,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: SogoColors.primaryLight,
                     shape: BoxShape.circle,
                   ),
@@ -125,7 +125,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       size: 40, color: SogoColors.primary),
                 ),
                 const SizedBox(height: SogoSpacing.lg),
-                Text('Verify your number', style: SogoText.headlineLg),
+                const Text('Verify your number', style: SogoText.headlineLg),
                 const SizedBox(height: SogoSpacing.sm),
                 Text(
                   'We sent a 6-digit code by SMS to\n${widget.phone}',

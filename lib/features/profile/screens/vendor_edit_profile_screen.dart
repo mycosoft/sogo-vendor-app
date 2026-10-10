@@ -71,6 +71,9 @@ class _VendorEditProfileScreenState extends State<VendorEditProfileScreen> {
   late Map<String, Map<String, String>> _hours =
       _parseHours(widget.provider['operating_hours']);
 
+  /// Automatic availability: the scheduler flips online/offline with hours.
+  late bool _autoHours = widget.provider['auto_hours'] == true;
+
   static Map<String, Map<String, String>> _parseHours(dynamic raw) {
     final out = <String, Map<String, String>>{};
     if (raw is Map) {
@@ -245,6 +248,7 @@ class _VendorEditProfileScreenState extends State<VendorEditProfileScreen> {
       final radius = double.tryParse(_t(_radius));
       if (radius != null) business['service_radius_km'] = radius;
       if (_hours.isNotEmpty) business['operating_hours'] = _hours;
+      business['auto_hours'] = _autoHours;
 
       await providerApi.update(business,
           logoPath: _logoPath, coverPath: _businessCoverPath);
@@ -631,6 +635,17 @@ class _VendorEditProfileScreenState extends State<VendorEditProfileScreen> {
                           initial: _hours,
                           onChanged: (v) => setState(() => _hours = v),
                         ),
+                        const SizedBox(height: SogoSpacing.md),
+                        SwitchListTile(
+                          value: _autoHours,
+                          onChanged: (v) =>
+                              setState(() => _autoHours = v),
+                          title: const Text('Automatic availability'),
+                          subtitle: const Text(
+                              'Go online/offline automatically with these hours'),
+                          contentPadding: EdgeInsets.zero,
+                          activeColor: SogoColors.primary,
+                        ),
                       ],
                     ),
                   ),
@@ -732,7 +747,7 @@ class _WorkingHoursEditorState extends State<_WorkingHoursEditor> {
     ('sun', 'Sun'),
   ];
 
-  late Map<String, Map<String, String>> _hours = Map.fromEntries(widget
+  late final Map<String, Map<String, String>> _hours = Map.fromEntries(widget
       .initial.entries
       .map((e) => MapEntry(e.key, Map<String, String>.from(e.value))));
 
@@ -777,7 +792,7 @@ class _WorkingHoursEditorState extends State<_WorkingHoursEditor> {
                           .copyWith(fontWeight: FontWeight.w700))),
               Switch(
                 value: _hours.containsKey(d.$1),
-                activeColor: SogoColors.primary,
+                activeThumbColor: SogoColors.primary,
                 onChanged: (v) {
                   setState(() {
                     if (v) {

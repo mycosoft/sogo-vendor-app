@@ -262,6 +262,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _loading = true;
   bool _sending = false;
   String? _error;
+  String? _rtChannel;
   late final Timer _poll;
 
   @override
@@ -269,14 +270,45 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _load();
     _poll = Timer.periodic(const Duration(seconds: 3), (_) => _pollNew());
+    _subscribeRealtime();
   }
 
   @override
   void dispose() {
     _poll.cancel();
+    if (_rtChannel != null) realtime.unsubscribe(_rtChannel!, 'message.sent');
     _input.dispose();
     _scroll.dispose();
     super.dispose();
+  }
+
+  /// Live socket upgrade: incoming messages arrive instantly instead of
+  /// waiting for the 3s poll. The poll stays as fallback.
+  Future<void> _subscribeRealtime() async {
+    try {
+      final me = await authApi.me();
+      final myId =
+          ((me['data'] as Map<String, dynamic>?)?['id'] as num?)?.toInt();
+      if (myId == null || !mounted) return;
+      _rtChannel = 'private-chat.$myId';
+      await realtime.subscribe(_rtChannel!, 'message.sent', (data) {
+        if (!mounted) return;
+        final from = (data['from_user_id'] as num?)?.toInt();
+        if (from != widget.userId) return;
+        final msg = {
+          'id': data['id'],
+          'body': data['body'],
+          'created_at': data['created_at'],
+          'from_me': false,
+        };
+        if (_messages.any((e) => e['id'] == msg['id'])) return;
+        setState(() {
+          _messages.add(msg);
+          _since = '${msg['created_at']}';
+        });
+        _jumpBottom();
+      });
+    } catch (_) {}
   }
 
   Future<void> _load() async {
@@ -424,7 +456,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                                   : SogoColors.textPrimary)),
                                       const SizedBox(height: 2),
                                       Text(
-                                          '${(m['created_at'] ?? '').toString().substring(11, 16)}',
+                                          (m['created_at'] ?? '').toString().substring(11, 16),
                                           style: SogoText.labelMd.copyWith(
                                               color: fromMe
                                                   ? Colors.white70
